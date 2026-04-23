@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emotion-Based Notes App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(180deg, #fff6fb, #ffeef7);
+      color: #444;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #ff8fb1;
+      color: white;
+      text-align: center;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    header h1 {
+      font-size: 32px;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 1200px;
+      margin: 28px auto;
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 260px;
+      position: relative;
+    }
+
+    .search-box span {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.7;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 14px 14px 14px 42px;
+      border: 2px solid #ffc0d2;
+      border-radius: 14px;
+      outline: none;
+      background: white;
+      font-size: 15px;
+    }
+
+    .add-btn,
+    .trash-btn {
+      border: none;
+      padding: 14px 20px;
+      border-radius: 14px;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 111, 158, 0.25);
+    }
+
+    .add-btn {
+      background: #ff6f9e;
+    }
+
+    .add-btn:hover {
+      background: #ff5a8f;
+    }
+
+    .trash-btn {
+      background: #c77d92;
+    }
+
+    .trash-btn:hover {
+      background: #b46b80;
+    }
+
+    .note-form,
+    .trash-section {
+      display: none;
+      background: #fff;
+      border: 2px solid #ffd1e0;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 22px rgba(255, 143, 177, 0.18);
+    }
+
+    .note-form h2,
+    .trash-section h2 {
+      color: #d84f84;
+      margin-bottom: 16px;
+    }
+
+    .note-form input,
+    .note-form textarea,
+    .note-form select {
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      border: 2px solid #ffd6e4;
+      border-radius: 12px;
+      outline: none;
+      font-size: 15px;
+      background: #fffdfd;
+    }
+
+    .note-form textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .save-btn,
+    .cancel-btn,
+    .restore-btn,
+    .delete-forever-btn,
+    .pin-btn,
+    .view-btn,
+    .edit-btn,
+    .delete-btn {
+      border: none;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .save-btn { background: #ff6f9e; }
+    .cancel-btn { background: #b77a8e; }
+    .restore-btn { background: #66b36d; }
+    .delete-forever-btn { background: #c94b69; }
+    .pin-btn { background: #ffb347; }
+    .view-btn { background: #7d9bf2; }
+    .edit-btn { background: #ff9bb8; }
+    .delete-btn { background: #e05d85; }
+
+    .save-btn:hover { background: #ff5a8f; }
+    .cancel-btn:hover { background: #a6677b; }
+    .restore-btn:hover { background: #55985c; }
+    .delete-forever-btn:hover { background: #b43d59; }
+    .pin-btn:hover { background: #f2a126; }
+    .view-btn:hover { background: #6886df; }
+    .edit-btn:hover { background: #f388aa; }
+    .delete-btn:hover { background: #cc4a72; }
+
+    .notes-grid,
+    .trash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+    }
+
+    .note-card {
+      position: relative;
+      min-height: 290px;
+      border-radius: 14px;
+      padding: 22px 18px 18px;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.09);
+      border: 1px solid rgba(0,0,0,0.05);
+      transform: rotate(-1deg);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+
+    .note-card:nth-child(even) {
+      transform: rotate(1deg);
+    }
+
+    .note-card:hover {
+      transform: scale(1.03) rotate(0deg);
+      box-shadow: 0 14px 25px rgba(0,0,0,0.12);
+    }
+
+    .note-card::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 62px;
+      height: 18px;
+      background: rgba(255,255,255,0.55);
+      border-radius: 4px;
+    }
+
+    .note-card h3 {
+      margin-top: 18px;
+      margin-bottom: 10px;
+      color: #333;
+      word-break: break-word;
+    }
+
+    .note-card p {
+      line-height: 1.5;
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 10px;
+    }
+
+    .note-category,
+    .note-emotion {
+      display: inline-block;
+      margin-bottom: 10px;
+      margin-right: 6px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(255,255,255,0.68);
+      color: #444;
+    }
+
+    .note-date {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #8b6d78;
+      font-size: 18px;
+      background: rgba(255,255,255,0.7);
+      border: 2px dashed #ffd1e0;
+      border-radius: 18px;
+      grid-column: 1 / -1;
+    }
+
+    /* Emotion colors */
+    .happy {
+      background: #dcf8d7;
+      border-left: 6px solid #4caf50;
+      color: #225b2a;
+    }
+
+    .sad {
+      background: #dcefff;
+      border-left: 6px solid #4a90e2;
+      color: #1f4872;
+    }
+
+    .stressed {
+      background: #fff4c7;
+      border-left: 6px solid #f4a100;
+      color: #6f5200;
+    }
+
+    .neutral {
+      background: #ffdbe8;
+      border-left: 6px solid #ff6f9e;
+      color: #6d2d44;
+    }
+
+    @media (max-width: 640px) {
+      header h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>My Emotion Notes App</h1>
+  </header>
+
+  <div class="container">
+    <div class="top-bar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Search notes, category, or emotion..." />
+      </div>
+      <button class="add-btn" onclick="showForm()">Add Note</button>
+      <button class="trash-btn" onclick="toggleTrashSection()">Trash</button>
+    </div>
+
+    <div class="note-form" id="noteForm">
+      <h2 id="formTitle">Add New Note</h2>
+
+      <input type="text" id="noteTitle" placeholder="Enter note title" />
+      <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+
+      <select id="noteCategory">
+        <option value="Study">Study</option>
+        <option value="Personal">Personal</option>
+        <option value="Work">Work</option>
+      </select>
+
+      <input type="password" id="notePassword" placeholder="Password (optional)" />
+
+      <div class="form-buttons">
+        <button class="save-btn" onclick="saveNote()">Save</button>
+        <button class="cancel-btn" onclick="hideForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="trash-section" id="trashSection">
+      <h2>Trash</h2>
+      <div class="trash-grid" id="trashContainer"></div>
+    </div>
+
+    <div class="notes-grid" id="notesContainer"></div>
+  </div>
+
+  <script>
+    let notes = JSON.parse(localStorage.getItem("notes")) || [];
+    let trashNotes = JSON.parse(localStorage.getItem("trashNotes")) || [];
+    let editIndex = -1;
+
+    function saveToLocalStorage() {
+      localStorage.setItem("notes", JSON.stringify(notes));
+      localStorage.setItem("trashNotes", JSON.stringify(trashNotes));
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    }
+
+    function normalizeText(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s\u0600-\u06FF]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function analyzeEmotion(text) {
+      const cleanText = normalizeText(text);
+
+      const happyWords = [
+        "happy", "joy", "joyful", "excited", "love", "great", "good",
+        "wonderful", "amazing", "awesome", "fun", "smile", "glad",
+        "relaxed", "proud", "grateful", "best", "nice",
+        "سعيد", "سعيدة", "مبسوط", "مبسوطة", "فرحان", "فرحانة",
+        "فرح", "احب", "أحب", "متحمس", "متحمسة", "مرتاح", "مرتاحة",
+        "ممتاز", "رائع", "رائعة", "جميل", "جميلة", "مستانس", "مستانسة"
+      ];
+
+      const sadWords = [
+        "sad", "cry", "crying", "upset", "hurt", "lonely", "depressed",
+        "broken", "pain", "miss", "empty", "bad", "tired", "down",
+        "حزين", "حزينة", "زعلان", "زعلانة", "زعل", "بكيت", "بكاء",
+        "مكسور", "مكسورة", "متضايق", "متضايقة", "ضيقة", "تعبان", "تعبانة",
+        "مقهور", "مقهورة", "وحيد", "وحيدة", "مهموم", "مهمومة"
+      ];
+
+      const stressedWords = [
+        "stress", "stressed", "anxious", "anxiety", "worry", "worried",
+        "pressure", "deadline", "exam", "busy", "panic", "nervous",
+        "overwhelmed", "afraid",
+        "متوتر", "متوترة", "توتر", "قلق", "قلقان", "قلقانة",
+        "مضغوط", "مضغوطة", "ضغط", "اختبار", "امتحان", "مرهق", "مرهقة",
+        "مشغول", "مشغولة", "خايف", "خايفة", "مرتبك", "مرتبكة"
+      ];
+
+      let happyScore = 0;
+      let sadScore = 0;
+      let stressedScore = 0;
+
+      happyWords.forEach(word => {
+        if (cleanText.includes(word)) happyScore++;
+      });
+
+      sadWords.forEach(word => {
+        if (cleanText.includes(word)) sadScore++;
+      });
+
+      stressedWords.forEach(word => {
+        if (cleanText.includes(word)) stressedScore++;
+      });
+
+      if (
+        cleanText.includes("very happy") ||
+        cleanText.includes("so happy") ||
+        cleanText.includes("مره سعيد") ||
+        cleanText.includes("مرة سعيد") ||
+        cleanText.includes("جدا سعيد") ||
+        cleanText.includes("جداً سعيد")
+      ) {
+        happyScore += 2;
+      }
+
+      if (
+        cleanText.includes("very sad") ||
+        cleanText.includes("so sad") ||
+        cleanText.includes("مره حزين") ||
+        cleanText.includes("مرة حزين") ||
+        cleanText.includes("جدا حزين") ||
+        cleanText.includes("جداً حزين")
+      ) {
+        sadScore += 2;
+      }
+
+      if (
+        cleanText.includes("very stressed") ||
+        cleanText.includes("so stressed") ||
+        cleanText.includes("مره متوتر") ||
+        cleanText.includes("مرة متوتر") ||
+        cleanText.includes("جدا متوتر") ||
+        cleanText.includes("جداً متوتر")
+      ) {
+        stressedScore += 2;
+      }
+
+      if (happyScore > sadScore && happyScore > stressedScore) {
+        return "Happy";
+      } else if (sadScore > happyScore && sadScore > stressedScore) {
+        return "Sad";
+      } else if (stressedScore > happyScore && stressedScore > sadScore) {
+        return "Stressed";
+      } else {
+        return "Neutral";
+      }
+    }
+
+    function getEmotionClass(emotion) {
+      switch (emotion) {
+        case "Happy":
+          return "happy";
+        case "Sad":
+          return "sad";
+        case "Stressed":
+          return "stressed";
+        default:
+          return "neutral";
+      }
+    }
+
+    function getEmotionPriority(emotion) {
+      switch (emotion) {
+        case "Stressed":
+          return 1;
+        case "Sad":
+          return 2;
+        case "Happy":
+          return 3;
+        default:
+          return 4;
+      }
+    }
+
+    function sortNotes(list) {
+      return [...list].sort((a, b) => {
+        if (b.pinned !== a.pinned) {
+          return b.pinned - a.pinned;
+        }
+        return getEmotionPriority(a.emotion) - getEmotionPriority(b.emotion);
+      });
+    }
+
+    function renderNotes(filteredNotes = notes) {
+      const notesContainer = document.getElementById("notesContainer");
+      notesContainer.innerHTML = "";
+
+      if (filteredNotes.length === 0) {
+        notesContainer.innerHTML = `
+          <div class="empty-state">
+            No notes found. Start by adding your first note
+          </div>
+        `;
+        return;
+      }
+
+      const sortedNotes = sortNotes(filteredNotes);
+
+      sortedNotes.forEach((note) => {
+        const originalIndex = notes.findIndex(
+          n =>
+            n.title === note.title &&
+            n.content === note.content &&
+            n.date === note.date &&
+            n.category === note.category &&
+            n.password === note.password &&
+            n.pinned === note.pinned &&
+            n.emotion === note.emotion
+        );
+
+        const noteCard = document.createElement("div");
+        const emotionClass = getEmotionClass(note.emotion);
+        noteCard.className = `note-card ${emotionClass}`;
+
+        noteCard.innerHTML = `
+          <h3>${note.pinned ? "📌 " : ""}${note.title}</h3>
+          <div class="note-category">${note.category}</div>
+          <div class="note-emotion">${note.emotion || "Neutral"}</div>
+          <p>${note.password ? "Protected note" : note.content}</p>
+          <span class="note-date">Time: ${formatDate(note.date)}</span>
+
+          <div class="note-actions">
+            <button class="pin-btn" onclick="togglePin(${originalIndex})">
+              ${note.pinned ? "Unpin" : "Pin"}
+            </button>
+            <button class="view-btn" onclick="openNote(${originalIndex})">View</button>
+            <button class="edit-btn" onclick="editNote(${originalIndex})">Edit</button>
+            <button class="delete-btn" onclick="deleteNote(${originalIndex})">Delete</button>
+          </div>
+        `;
+
+        notesContainer.appendChild(noteCard);
+      });
+    }
+
+    function renderTrash() {
+      const trashContainer = document.getElementById("trashContainer");
+      trashContainer.innerHTML = "";
+
+      if (trashNotes.length === 0) {
+        trashContainer.innerHTML = `
+          <div class="empty-state">
+            Trash is empty
+          </div>
+        `;
+        return;
+      }
+
+      trashNotes.forEach((note, index) => {
+        const noteCard = document.createElement("div");
+        const emotionClass = getEmotionClass(note.emotion);
+        noteCard.className = `note-card ${emotionClass}`;
+
+        noteCard.innerHTML = `
+          <h3>${note.title}</h3>
+          <div class="note-category">${note.category}</div>
+          <div class="note-emotion">${note.emotion || "Neutral"}</div>
+          <p>${note.password ? "Protected note" : note.content}</p>
+          <span class="note-date">Time: ${formatDate(note.date)}</span>
+
+          <div class="note-actions">
+            <button class="restore-btn" onclick="restoreNote(${index})">Restore</button>
+            <button class="delete-forever-btn" onclick="deleteForever(${index})">Delete Forever</button>
+          </div>
+        `;
+
+        trashContainer.appendChild(noteCard);
+      });
+    }
+
+    function showForm() {
+      document.getElementById("noteForm").style.display = "block";
+    }
+
+    function hideForm() {
+      document.getElementById("noteForm").style.display = "none";
+      document.getElementById("noteTitle").value = "";
+      document.getElementById("noteContent").value = "";
+      document.getElementById("noteCategory").value = "Study";
+      document.getElementById("notePassword").value = "";
+      document.getElementById("formTitle").innerText = "Add New Note";
+      editIndex = -1;
+    }
+
+    function saveNote() {
+      const title = document.getElementById("noteTitle").value.trim();
+      const content = document.getElementById("noteContent").value.trim();
+      const category = document.getElementById("noteCategory").value;
+      const password = document.getElementById("notePassword").value;
+      const emotion = analyzeEmotion(content);
+
+      if (title === "" || content === "") {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const noteData = {
+        title: title,
+        content: content,
+        category: category,
+        password: password,
+        emotion: emotion,
+        pinned: false,
+        date: new Date().toISOString()
+      };
+
+      if (editIndex === -1) {
+        notes.push(noteData);
+      } else {
+        notes[editIndex] = {
+          ...notes[editIndex],
+          title: title,
+          content: content,
+          category: category,
+          password: password,
+          emotion: emotion
+        };
+      }
+
+      saveToLocalStorage();
+      renderNotes();
+      renderTrash();
+      hideForm();
+    }
+
+    function editNote(index) {
+      const note = notes[index];
+
+      if (note.password) {
+        const input = prompt("Enter password to edit this note:");
+        if (input !== note.password) {
+          alert("Wrong password!");
+          return;
+        }
+      }
+
+      document.getElementById("noteForm").style.display = "block";
+      document.getElementById("formTitle").innerText = "Edit Note";
+      document.getElementById("noteTitle").value = note.title;
+      document.getElementById("noteContent").value = note.content;
+      document.getElementById("noteCategory").value = note.category;
+      document.getElementById("notePassword").value = note.password;
+      editIndex = index;
+    }
+
+    function togglePin(index) {
+      notes[index].pinned = !notes[index].pinned;
+      saveToLocalStorage();
+      renderNotes();
+    }
+
+    function openNote(index) {
+      const note = notes[index];
+
+      if (note.password) {
+        const input = prompt("Enter password to open this note:");
+        if (input !== note.password) {
+          alert("Wrong password!");
+          return;
+        }
+      }
+
+      alert(`Detected Emotion: ${note.emotion}\n\n${note.content}`);
+    }
+
+    function deleteNote(index) {
+      const note = notes[index];
+
+      if (confirm("Are you sure you want to move this note to trash?")) {
+        trashNotes.push(note);
+        notes.splice(index, 1);
+        saveToLocalStorage();
+        renderNotes();
+        renderTrash();
+      }
+    }
+
+    function restoreNote(index) {
+      notes.push(trashNotes[index]);
+      trashNotes.splice(index, 1);
+      saveToLocalStorage();
+      renderNotes();
+      renderTrash();
+    }
+
+    function deleteForever(index) {
+      if (confirm("Delete this note forever?")) {
+        trashNotes.splice(index, 1);
+        saveToLocalStorage();
+        renderTrash();
+      }
+    }
+
+    function toggleTrashSection() {
+      const trashSection = document.getElementById("trashSection");
+
+      if (trashSection.style.display === "block") {
+        trashSection.style.display = "none";
+      } else {
+        trashSection.style.display = "block";
+        renderTrash();
+      }
+    }
+
+    function searchNotes() {
+      const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+      const filteredNotes = notes.filter(note =>
+        note.title.toLowerCase().includes(searchValue) ||
+        note.content.toLowerCase().includes(searchValue) ||
+        note.category.toLowerCase().includes(searchValue) ||
+        (note.emotion && note.emotion.toLowerCase().includes(searchValue))
+      );
+
+      renderNotes(filteredNotes);
+    }
+
+    document.getElementById("searchInput").addEventListener("keyup", searchNotes);
+
+    notes = notes.map(note => ({
+      ...note,
+      emotion: note.emotion || analyzeEmotion(note.content || "")
+    }));
+
+    trashNotes = trashNotes.map(note => ({
+      ...note,
+      emotion: note.emotion || analyzeEmotion(note.content || "")
+    }));
+
+    saveToLocalStorage();
+    renderNotes();
+    renderTrash();
+  </script>
+</body>
+</html>
